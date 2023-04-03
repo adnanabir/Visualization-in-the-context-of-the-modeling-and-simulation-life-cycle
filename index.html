@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>Visualization JSON | ARS Lab | Carleton University</title>
+
+		<link rel='shortcut icon' href='assets/favicon.ico'>
+		<link rel="stylesheet" href="./framework/css/base.css">
+		<link rel="stylesheet" href="./framework/css/ui.css">
+		<link rel="stylesheet" href="./framework/css/widgets.css">
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.6.0/chart.min.js"></script>
+	</head>
+	<body>
+		<div id="loader"></div>
+		<div>
+		<h1>Select options before click on loading </h1>
+		Start timeframe: <input id = tf_s> End timeframe: <input id = tf_e>
+		<br>
+		Message type: <input id="rd3" name="grp2" type="radio" value="state_messages"checked>State messages</input><input id="rd4" name="grp2" type="radio" value="output_messages">Output messages</input><br>
+		<br>
+		<input id="rd1" name="grp1" type="radio" value="All Model"checked>All Model</input><input id="rd2" name="grp1" type="radio" value="Select ">Select </input>Model ID: <input id = Model_id>
+		<br>
+		Model type: <input id = "Model_Type">  Statistics type (State messages): <input id = "Stat_Type">
+		<br>
+		<div>
+		<div style="display:inline-block;width:100%;">
+			<div id="content_1" style="display:inline-block;width:45%;vertical-align:top"></div>
+			<div id="content_2" style="display:inline-block;width:45%;vertical-align:top"><canvas id="myChart1"></canvas><canvas id="myChart2"></canvas><canvas id="myChart3"></canvas><canvas id="myChart4"></canvas></div>
+			<div>
+		</div>
+	
+		
+	</body>
+	<script type="module">
+		import Loader from "./framework/widgets/loader.js";
+		import Dom from "./framework/tools/dom.js";
+		
+		var loader = new Loader(document.querySelector("#loader"));
+		var content1 = document.querySelector("#content_1");
+		var content2 = document.querySelector("#content_2");
+		
+		
+		let data = [];
+		loader.on("ready", ev => {		
+		
+			Dom.create("h1", { innerHTML:"showing all state messages for the selected time frame" }, content1);
+		
+				var tfs = parseFloat(document.getElementById("tf_s").value);
+				var tfe = parseFloat(document.getElementById("tf_e").value);
+				var m_id = parseFloat(document.getElementById("Model_id").value);
+				//var rd_1 = document.getElementById("rd1");
+				//var rd_2 = document.getElementById("rd2");
+				//var p_mv_2 = parseFloat(document.getElementById("pmv_2").value);
+				var mt = document.getElementById("Model_Type").value;
+				var st = document.getElementById("Stat_Type").value;
+				//var p_2 = document.getElementById("pm_2").value;
+			
+			for (var i = tfs; i <= tfe; i++) {
+				Dom.create("div", { innerHTML:"*****************************" }, content1);
+				if (rd4.checked==true){
+					var messages = ev.simulation.frames[i].output_messages;
+				}
+				else if(rd3.checked==true){
+					var messages = ev.simulation.frames[i].state_messages;
+
+				}
+				messages.forEach(m => {
+
+				 var s1_value = m.value;
+				 var s2_value = JSON.stringify(m.value);
+
+
+
+				if (rd4.checked==true){
+					if (m.model.model_type.name != mt) return;
+						if(rd2.checked==true){
+							if (m.model.id != m_id) return;
+							}
+				var line1 = `At time frame ${i} The output of model type: ${m.model.model_type.name}, model ID: (${m.model.id}) at port ${s1_value.port_i} is : ${s1_value.quantity}`;
+				}
+				else if(rd3.checked==true){
+					if (m.model.model_type.name != mt) return;
+						if(rd2.checked==true){
+							if (m.model.id != m_id) return;
+							}
+
+						if (st == "dead") {
+							var s1_value = m.value;
+							var line1 = `At time frame ${i} The statistics of model type: ${m.model.model_type.name}, model ID: (${m.model.id}) is ${st} :${s1_value.dead}`;
+							}
+						else if (st == "active") {
+							var s1_value = m.value;
+
+							var line1 = `At time frame ${i} The statistics of model type: ${m.model.model_type.name}, model ID: (${m.model.id}) is ${st} :${s1_value.active}`;
+							}
+						else if (st == "total") {
+							var s1_value = m.value;
+							var line1 = `At time frame ${i} The statistics of model type: ${m.model.model_type.name}, model ID: (${m.model.id}) is ${st} :${s1_value.total}`;
+							}
+						else if (st == "released") {
+							var s1_value = m.value;
+							var line1 = `At time frame ${i} The statistics of model type: ${m.model.model_type.name}, model ID: (${m.model.id}) is ${st} :${s1_value.released}`;
+							}
+						else if (st == "rejected") {
+							var s1_value = m.value;
+							var line1 = `At time frame ${i} The statistics of model type: ${m.model.model_type.name}, model ID: (${m.model.id}) is ${st} :${s1_value.rejected}`;
+							}
+
+						}
+
+					var model_id = m.model.id;
+					var time_1 = i;
+					var total = s1_value.total;
+					var dead = s1_value.dead;
+					var active = s1_value.active;
+					var released = s1_value.released;
+					var rejected = s1_value.rejected;
+					var quantity = s1_value.quantity;
+					if (st == "dead") {data.push({ model_id:model_id, time: time_1, value: dead });}
+					else if (st == "active") {data.push({ model_id:model_id, time: time_1, value: active });}
+					else if (st == "total") {data.push({ model_id:model_id, time: time_1, value: total });}
+					else if (st == "released") {data.push({ model_id:model_id, time: time_1, value: released });}
+					else if (st == "rejected") {data.push({ model_id:model_id, time: time_1, value: rejected });}
+					else if (st == "quantity") {data.push({ model_id:model_id, time: time_1, value: quantity });}
+						console.log(data);
+					Dom.create("div", { innerHTML:line1 }, content1);
+					
+				});
+			}
+drawg();
+
+		});
+// Define the data for the chart
+function drawg(){
+
+// create arrays for the labels (times) and data values
+		var labels = [];
+		var values = [];
+
+		for (var i = 0; i < data.length; i++) {
+			labels.push(data[i].time);
+			values.push(data[i].value);
+		}
+
+		// create a new Chart object and configure the chart
+		var ctx = document.getElementById('myChart1').getContext('2d');
+		var myChart1 = new Chart(ctx, {
+		    type: 'line',
+		    data: {
+		        labels: labels,
+		        datasets: [{
+		            label: 'Time Series Data',
+		            data: values,
+		            borderColor: 'rgb(255, 99, 132)',
+		            borderWidth: 1
+		        }]
+		    },
+		    options: {
+		        scales: {
+		            y: {
+		                beginAtZero: true
+		            }
+		        }
+		    }
+		});
+		
+
+  }
+	</script>
+</html>
